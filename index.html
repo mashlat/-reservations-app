@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservation Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header>
+        <div>
+          <p class="eyebrow">Milos Reservations</p>
+          <h1>Phone Booking Console</h1>
+          <p class="subtle">
+            Capture every reservation while speaking with guests. Keep areas,
+            tables, and party details aligned at a glance.
+          </p>
+        </div>
+        <div class="header-metrics">
+          <div>
+            <p class="eyebrow">Reservations today</p>
+            <p class="metric" id="metric-today">0</p>
+          </div>
+          <div>
+            <p class="eyebrow">Next arrival</p>
+            <p class="metric" id="metric-next">–</p>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="card layout">
+          <div>
+            <h2>Book a Table</h2>
+            <form id="reservation-form">
+              <div class="grid">
+                <label>
+                  Customer name
+                  <input
+                    type="text"
+                    name="customerName"
+                    id="customer-name"
+                    required
+                    placeholder="Maria Papadopoulou"
+                  />
+                </label>
+                <label>
+                  Phone number
+                  <input
+                    type="tel"
+                    name="phone"
+                    id="phone"
+                    required
+                    placeholder="+30 69 1234 5678"
+                  />
+                </label>
+                <label>
+                  Party size
+                  <input
+                    type="number"
+                    name="partySize"
+                    id="party-size"
+                    min="1"
+                    max="25"
+                    required
+                    value="2"
+                  />
+                </label>
+                <label>
+                  Date & time
+                  <input
+                    type="datetime-local"
+                    name="dateTime"
+                    id="reservation-datetime"
+                    required
+                  />
+                </label>
+                <label>
+                  Dining area
+                  <select name="area" id="area-select"></select>
+                </label>
+                <label>
+                  Table
+                  <select name="table" id="table-select"></select>
+                </label>
+              </div>
+              <label class="full-width">
+                Notes (optional)
+                <textarea
+                  name="notes"
+                  id="notes"
+                  rows="2"
+                  placeholder="Birthday, allergies, repeat guest…"
+                ></textarea>
+              </label>
+              <div class="actions">
+                <button type="submit">Save reservation</button>
+                <button type="button" class="ghost" id="clear-form">
+                  Reset form
+                </button>
+              </div>
+              <p id="form-feedback" role="alert"></p>
+            </form>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <div class="table-status-header">
+              <div>
+                <h2>Table status</h2>
+                <p class="subtle">
+                  Snapshot of tables in the selected area for the chosen day.
+                </p>
+              </div>
+              <label class="filter">
+                Show date
+                <input type="date" id="filter-date" />
+              </label>
+            </div>
+            <div id="table-badges" class="table-badges"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="list-header">
+            <div>
+              <h2>Upcoming reservations</h2>
+              <p class="subtle">
+                Filter by day to see arrivals and quickly edit or cancel.
+              </p>
+            </div>
+            <div class="list-actions">
+              <input
+                type="search"
+                id="search-name"
+                placeholder="Search by guest or table"
+              />
+              <button type="button" class="ghost" id="clear-storage">
+                Clear saved data
+              </button>
+            </div>
+          </div>
+          <ul id="reservation-list"></ul>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
