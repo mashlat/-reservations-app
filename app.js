@@ -29,7 +29,7 @@ const areas = {
 
 const dom = {
   areaSelect: document.querySelector("#area-select"),
-  tableSelect: document.querySelector("#table-select"),
+  tablePills: document.querySelector("#table-pill-container"),
   tableBadges: document.querySelector("#table-badges"),
   reservationList: document.querySelector("#reservation-list"),
   filterDate: document.querySelector("#filter-date"),
@@ -79,6 +79,12 @@ const showMessage = (text = "", tone = "") => {
   dom.feedback.className = tone ? tone : "";
 };
 
+const getTables = (reservation) => {
+  if (Array.isArray(reservation.tables)) return reservation.tables;
+  if (reservation.table) return [reservation.table];
+  return [];
+};
+
 const populateAreaOptions = () => {
   Object.keys(areas).forEach((area) => {
     const option = document.createElement("option");
@@ -88,15 +94,31 @@ const populateAreaOptions = () => {
   });
 };
 
-const populateTables = (area) => {
-  dom.tableSelect.innerHTML = "";
-  areas[area].forEach((table) => {
-    const option = document.createElement("option");
-    option.value = table;
-    option.textContent = table;
-    dom.tableSelect.appendChild(option);
+const renderTablePills = (area, selectedTables = []) => {
+  dom.tablePills.innerHTML = "";
+  const tables = areas[area] || [];
+  const selectedSet = new Set(selectedTables);
+
+  tables.forEach((table) => {
+    const pill = document.createElement("button");
+    pill.type = "button";
+    pill.className = "table-pill";
+    pill.textContent = table;
+    pill.dataset.table = table;
+    if (selectedSet.has(table)) {
+      pill.classList.add("selected");
+    }
+    pill.addEventListener("click", () => {
+      pill.classList.toggle("selected");
+    });
+    dom.tablePills.appendChild(pill);
   });
 };
+
+const getSelectedTables = () =>
+  Array.from(dom.tablePills.querySelectorAll(".table-pill.selected")).map(
+    (pill) => pill.dataset.table
+  );
 
 const renderTableBadges = () => {
   const selectedArea = dom.areaSelect.value;
@@ -105,7 +127,8 @@ const renderTableBadges = () => {
 
   areas[selectedArea].forEach((table) => {
     const booking = reservations.find(
-      (res) => res.table === table && (!selectedDate || res.date === selectedDate)
+      (res) =>
+        getTables(res).includes(table) && (!selectedDate || res.date === selectedDate)
     );
     const badge = document.createElement("div");
     badge.className = `table-badge ${booking ? "reserved" : "available"}`;
@@ -131,12 +154,15 @@ const getFilteredReservations = () => {
   const day = dom.filterDate.value;
   return reservations
     .filter((res) => (!day || res.date === day))
-    .filter(
-      (res) =>
+    .filter((res) => {
+      if (!term) return true;
+      const tables = getTables(res);
+      return (
         res.customerName.toLowerCase().includes(term) ||
-        res.table.toLowerCase().includes(term) ||
-        res.area.toLowerCase().includes(term)
-    )
+        res.area.toLowerCase().includes(term) ||
+        tables.some((table) => table.toLowerCase().includes(term))
+      );
+    })
     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 };
 
@@ -168,7 +194,7 @@ const renderReservationList = () => {
       <div>
         <p class="row-meta">${res.notes || "—"}</p>
       </div>
-      <div class="tag">${res.area} • ${res.table}</div>
+      <div class="tag">${res.area} • ${getTables(res).join(", ")}</div>
       <button type="button" data-action="cancel">Cancel</button>
     `;
     dom.reservationList.appendChild(item);
@@ -190,7 +216,7 @@ const renderMetrics = () => {
     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
   dom.metricNext.textContent = upcoming.length
-    ? `${formatTime(upcoming[0].dateTime)} • ${upcoming[0].table}`
+    ? `${formatTime(upcoming[0].dateTime)} • ${getTables(upcoming[0]).join(", ")}`
     : "–";
 };
 
@@ -203,7 +229,7 @@ const refreshUI = () => {
 const resetForm = () => {
   dom.form.reset();
   dom.areaSelect.value = Object.keys(areas)[0];
-  populateTables(dom.areaSelect.value);
+  renderTablePills(dom.areaSelect.value);
   dom.dateTimeInput.value = toIsoLocal();
   showMessage("");
 };
@@ -212,7 +238,10 @@ const detectConflict = (newReservation) => {
   const windowMinutes = 90;
   const targetTime = new Date(newReservation.dateTime).getTime();
   return reservations.find((existing) => {
-    if (existing.table !== newReservation.table) return false;
+    const overlap = getTables(existing).some((table) =>
+      newReservation.tables.includes(table)
+    );
+    if (!overlap) return false;
     const delta = Math.abs(new Date(existing.dateTime).getTime() - targetTime);
     return delta < windowMinutes * 60 * 1000;
   });
@@ -229,6 +258,12 @@ const handleSubmit = (event) => {
   }
 
   const [date, time] = dateTime.split("T");
+  const selectedTables = getSelectedTables();
+
+  if (!selectedTables.length) {
+    showMessage("Select at least one table.", "warning");
+    return;
+  }
 
   const supportsRandomUUID =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function";
@@ -239,7 +274,7 @@ const handleSubmit = (event) => {
     phone: formData.get("phone").trim(),
     partySize: Number(formData.get("partySize")),
     area: formData.get("area"),
-    table: formData.get("table"),
+    tables: selectedTables,
     notes: formData.get("notes").trim(),
     date,
     time,
@@ -254,8 +289,14 @@ const handleSubmit = (event) => {
 
   const conflict = detectConflict(reservation);
   if (conflict) {
+    const overlapTables = getTables(conflict).filter((table) =>
+      reservation.tables.includes(table)
+    );
+    const tableLabel = overlapTables.length
+      ? overlapTables.join(", ")
+      : reservation.tables.join(", ");
     showMessage(
-      `Heads up: ${reservation.table} is already booked at ${conflict.time} for ${conflict.customerName}.`,
+      `Heads up: ${tableLabel} is already booked at ${conflict.time} for ${conflict.customerName}.`,
       "warning"
     );
     return;
@@ -267,8 +308,7 @@ const handleSubmit = (event) => {
   showMessage("Reservation saved.", "success");
   dom.form.reset();
   dom.areaSelect.value = reservation.area;
-  populateTables(reservation.area);
-  dom.tableSelect.value = reservation.table;
+  renderTablePills(reservation.area, reservation.tables);
   dom.dateTimeInput.value = toIsoLocal(new Date(dateTime));
 };
 
@@ -294,13 +334,13 @@ const clearStorage = () => {
 const init = () => {
   populateAreaOptions();
   dom.areaSelect.value = Object.keys(areas)[0];
-  populateTables(dom.areaSelect.value);
+  renderTablePills(dom.areaSelect.value);
   dom.dateTimeInput.value = toIsoLocal();
   dom.filterDate.value = todayStr();
 
   dom.form.addEventListener("submit", handleSubmit);
   dom.areaSelect.addEventListener("change", () => {
-    populateTables(dom.areaSelect.value);
+    renderTablePills(dom.areaSelect.value);
     renderTableBadges();
   });
   dom.filterDate.addEventListener("change", refreshUI);

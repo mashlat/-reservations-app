@@ -116,6 +116,44 @@ label {
   font-size: 0.95rem;
 }
 
+.table-label {
+  gap: 0.3rem;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: #7a8199;
+  font-weight: 500;
+}
+
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.table-pill {
+  border-radius: 999px;
+  border: 1px solid #d6dcef;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  background: #f5f7fb;
+  color: #252c41;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.table-pill.selected {
+  background: #111c4a;
+  color: #fff;
+  border-color: #111c4a;
+}
+
+.table-pill:active {
+  transform: scale(0.97);
+}
+
 input,
 select,
 textarea,

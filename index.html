@@ -16,7 +16,7 @@
     <div class="app-shell">
       <header>
         <div>
-          <p class="eyebrow">Spiti Tou Passa</p>
+          <p class="eyebrow">Milos Reservations</p>
           <h1>Phone Booking Console</h1>
           <p class="subtle">
             Capture every reservation while speaking with guests. Keep areas,
@@ -48,7 +48,7 @@
                     name="customerName"
                     id="customer-name"
                     required
-                    placeholder="Κώστας Πάσσαρης"
+                    placeholder="Maria Papadopoulou"
                   />
                 </label>
                 <label>
@@ -86,9 +86,10 @@
                   Dining area
                   <select name="area" id="area-select"></select>
                 </label>
-                <label>
-                  Table
-                  <select name="table" id="table-select"></select>
+                <label class="table-label">
+                  Tables
+                  <small class="hint">Tap one or more tables below</small>
+                  <div id="table-pill-container" class="pill-grid"></div>
                 </label>
               </div>
               <label class="full-width">
@@ -156,6 +157,4 @@
     <script src="./app.js"></script>
   </body>
 </html>
-
-
 
